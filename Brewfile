@@ -1,0 +1,13 @@
+tap "d12frosted/emacs-plus"
+tap "homebrew/bundle"
+tap "homebrew/cask-fonts"
+brew "black"
+brew "clang-format"
+brew "fzf"
+brew "pyright"
+brew "shellcheck"
+brew "tmux"
+brew "d12frosted/emacs-plus/emacs-plus@30", args: ["with-native-comp", "without-cocoa"]
+cask "flux"
+cask "font-jetbrains-mono"
+cask "iterm2"
