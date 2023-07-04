@@ -1,14 +1,14 @@
-;;; early-init.el --- Emacs preconfiguration
+;;; early-init.el --- pre-gui & pre-package.el configuration.
+;;;
 ;;; Commentary:
-;;
-;; Emacs 27.1+ will load this file prior to GUI initialization.
-;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Early-Init-File.html
-;;
+;; Emacs 27+: https://www.gnu.org/software/emacs/manual/html_node/emacs/Early-Init-File.html
+;;;
 ;;; Code:
 
-(setq gc-cons-threshold most-positive-fixnum ; avoid garbage collection during startup
+;; Max `gc-cons-threshold` to avoid gc at startup - must be reset later.
+(setq gc-cons-threshold most-positive-fixnum
       inhibit-splash-screen t
-      package-enable-at-startup nil)         ; do not use package.el
+      package-enable-at-startup nil)
 
 (provide 'early-init)
 ;;; early-init.el ends here

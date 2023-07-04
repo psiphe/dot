@@ -26,7 +26,7 @@
     "Alpha Component" : 1,
     "Green Component" : 0.69411764705882351
   },
-  "HotKey Window Floats" : false,
+  "HotKey Window Floats" : true,
   "Right Option Key Sends" : 2,
   "Character Encoding" : 4,
   "Selection Color" : {
@@ -81,19 +81,20 @@
   },
   "Use Non-ASCII Font" : false,
   "Link Color" : {
-    "Red Component" : 0,
+    "Red Component" : 0.45098039215686275,
     "Color Space" : "sRGB",
-    "Blue Component" : 0.73422712087631226,
+    "Blue Component" : 0.792156862745098,
     "Alpha Component" : 1,
-    "Green Component" : 0.35915297269821167
+    "Green Component" : 0.85490196078431369
   },
   "Shortcut" : "",
   "Background Image Location" : "",
   "Bold Color" : {
-    "Red Component" : 0.57647058823529407,
+    "Red Component" : 0.47843137254901963,
     "Color Space" : "sRGB",
-    "Blue Component" : 0.63137254901960782,
-    "Green Component" : 0.63137254901960782
+    "Blue Component" : 0.96862745098039216,
+    "Alpha Component" : 1,
+    "Green Component" : 0.63529411764705879
   },
   "Use Cursor Guide" : false,
   "Unlimited Scrollback" : false,
@@ -318,7 +319,7 @@
   "Window Type" : 1,
   "Use Bright Bold" : true,
   "Has Hotkey" : true,
-  "HotKey Modifier Activation" : 0,
+  "HotKey Modifier Activation" : 1,
   "Cursor Text Color" : {
     "Red Component" : 0.16078431372549021,
     "Color Space" : "sRGB",
@@ -381,6 +382,7 @@
   "Blur" : false,
   "Normal Font" : "JetBrainsMonoNLNFM-Regular 14",
   "Vertical Spacing" : 1.1499999999999999,
+  "Use Underline Color" : false,
   "Ansi 7 Color" : {
     "Red Component" : 0.75294117647058822,
     "Color Space" : "sRGB",
@@ -389,13 +391,13 @@
     "Green Component" : 0.792156862745098
   },
   "Space" : -1,
-  "HotKey Window AutoHides" : true,
+  "HotKey Window AutoHides" : false,
   "Command" : "",
   "Terminal Type" : "xterm-256color",
   "Horizontal Spacing" : 1,
   "Option Key Sends" : 0,
   "Only The Default BG Color Uses Transparency" : false,
-  "HotKey Window Animates" : false,
+  "HotKey Window Animates" : true,
   "HotKey Modifier Flags" : 262144,
   "Ansi 15 Color" : {
     "Red Component" : 0.75294117647058822,
@@ -405,6 +407,7 @@
     "Green Component" : 0.792156862745098
   },
   "Open Toolbelt" : false,
+  "Minimum Contrast" : 0,
   "Ansi 6 Color" : {
     "Red Component" : 0.49019607843137253,
     "Color Space" : "sRGB",
@@ -436,6 +439,7 @@
   "HotKey Alternate Shortcuts" : [
 
   ],
+  "Use Tab Color" : false,
   "Visual Bell" : true,
   "Custom Directory" : "No",
   "Ansi 5 Color" : {
