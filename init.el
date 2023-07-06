@@ -2,16 +2,18 @@
 ;;;
 ;;; Commentary:
 ;; Divided into sections:
-;; * Bootstrapping: essential configuration (package management, gc config, etc.)
+;; * Bootstrapping
+;;   - "System" configuration; package management, gc config, the like.
 ;; * Emacs Builtins
 ;; * External Packages
-;; * Local Overrides: machine local config
+;; * Load Local Overrides
 ;;;
 ;;; Code:
 
 ;;; 0 - Bootstrapping:
 
-;; Use straight.el as the package manager in place of the default (package.el).
+;; - - Package Management
+;; Use straight.el, instead of package.el, as the package manager.
 ;; https://github.com/radian-software/straight.el#getting-started
 (defvar bootstrap-version)
 (let ((bootstrap-file
@@ -29,41 +31,67 @@
     (straight-use-package 'use-package))
 (setq straight-use-package-by-default t)
 
-;; Gcmh-mode manages `gc-cons-threshold` to prefer gc while idling.
-;; `gc-cons-threshold` is purposefully set too high in `early-init.el` to
-;; load faster. Without `gchm-mode`, `gc-cons-threshold` should be
-;; set to something more reasonable somewhere in `init.el`.
+;; - - Garbage Collection
+;; `gcmh-mode` actively manages the memory usage threshold to trigger garbage
+;; collection (`gc-cons-threshold`/`gc-cons-percentage`), with the intent to
+;; trigger gcs while idling.
+;;
+;; `gc-cons-threshold` is set excessively high in `early-init.el` to load Emacs
+;; faster by avoiding gcs. `gcmh-mode` starts as soon as config is finished
+;; loading on the `emacs-startup-hook`, and should reset the thresholds to values
+;; that don't result in memory pressure (fingers crossed).
+;;
+;; The thresholds do not need to be dynamic, and it should be equally reasonable
+;; to find static values that work well for the hardware. Lsp-mode has a few
+;; suggestions on how to do that:
+;; - https://emacs-lsp.github.io/lsp-mode/page/performance/#adjust-gc-cons-threshold
 (use-package gcmh
   :hook (emacs-startup))
 
-;; Create a user keymap.
+;; - - User Prefix(es)
+;; Create a dedicated user keymap.
+;; The C-c keymap is assumed to be available for use by many 3p packages; this
+;; is a properly isolated version of C-c.
 (defvar u-map)
 (define-prefix-command 'u-map)
 (global-set-key (kbd "C-j") u-map)
 
-;; Load UI modifications early to avoid visual jitter.
-(add-to-list 'custom-theme-load-path "~/.config/emacs/nox-theme")
-(load-theme 'nox t)
+;; - - UI
+;; Rendering UI is one of the heavier tasks at startup. Frontload it to avoid
+;; weird visuals at launch.
 (menu-bar-mode -1)
 (set-display-table-slot standard-display-table 'vertical-border (make-glyph-code ?│))
+
+;; TODO: get this into a use-package declaration
+;; I tried to translate this and it didn't work for some reason.
+(straight-use-package
+ '(nox
+   :type git
+   :repo "https://github.com/psiphe/nox-theme"))
+(load-theme 'nox t)
 
 (use-package doom-modeline
   :hook (emacs-startup))
 
+;; Just as compatible as `all-the-icons` + terminal support. Enables
+;; glyphs for `centaur-tabs`, `dired`, `mode-line`, etc.
+;; REQUIRES A NERD FONT: https://github.com/ryanoasis/nerd-fonts
 (use-package nerd-icons)
 (use-package nerd-icons-dired
   :hook
   (dired-mode . nerd-icons-dired-mode))
 
+;; A nice looking tabbar.
 (use-package centaur-tabs
   :init
   (setq centaur-tabs-set-icons t)
   (centaur-tabs-mode t)
   :config
+  ;; disable tabs in a few major modes
   (add-hook 'compilation-mode-hook 'centaur-tabs-local-mode)
   (add-hook 'dired-mode-hook 'centaur-tabs-local-mode)
   (add-hook 'flymake-diagnostics-buffer-mode-hook 'centaur-tabs-local-mode)
-  (setq centaur-tabs-gray-out-icons 'buffer ; gray out icons of inactive tabs
+  (setq centaur-tabs-gray-out-icons 'buffer    ; gray out icons of inactive tabs
         centaur-tabs-show-new-tab-button nil
         centaur-tabs-close-button ""
         centaur-tabs-enable-ido-completion nil)
@@ -98,8 +126,8 @@
               tab-width 4
               truncate-lines nil)
 
-(setq completion-styles '(basic partial-completion flex)
-      kill-buffer-query-functions (delq 'process-kill-buffer-query-function kill-buffer-query-functions)
+(setq completion-styles '(basic partial-completion flex)                                                 ; minibuffer filtering
+      kill-buffer-query-functions (delq 'process-kill-buffer-query-function kill-buffer-query-functions) ; do not prompt to kill live process buffers
       make-backup-files nil)
 
 (defun open-line-below (arg)
@@ -119,12 +147,13 @@
 
 (add-hook 'compilation-filter-hook 'ansi-color-compilation-filter)
 (add-hook 'conf-mode-hook 'display-line-numbers-mode)
+(add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
 (add-hook 'prog-mode-hook 'display-line-numbers-mode)
 (add-hook 'prog-mode-hook 'electric-pair-mode)
-(add-hook 'window-setup-hook 'winner-mode)
+(add-hook 'window-setup-hook 'winner-mode) ; undo/redo for the window arrangement
 
-(global-set-key (kbd "M-m") 'scroll-other-window)      ; hack: C-.
-(global-set-key (kbd "M-o") 'scroll-other-window-down) ; hack: C-,
+(global-set-key (kbd "M-m") 'scroll-other-window)      ; hack: mapped in iterm to C-.
+(global-set-key (kbd "M-o") 'scroll-other-window-down) ; hack: mapped in iterm to C-,
 (global-set-key (kbd "C-k") 'kill-whole-line)
 (global-set-key (kbd "C-o") 'open-line-below)
 (global-set-key (kbd "C-q") 'open-line-above)
@@ -133,13 +162,20 @@
 (define-key u-map (kbd "C-p") 'winner-undo)
 (define-key u-map (kbd "C-k") 'kill-current-buffer)
 
-(with-eval-after-load 'dired
-  (define-key dired-mode-map (kbd "p") 'dired-up-directory))
+(use-package dired
+  :straight (:type built-in)
+  :bind
+  (:map dired-mode-map
+        ("p" . dired-up-directory)))
 
-(with-eval-after-load 'org
-  (define-key org-mode-map (kbd "C-j") nil) ; u-map prefix key
+(use-package org
+  :straight (:type built-in)
+  :config
   (setq org-hide-emphasis-markers t
-        org-startup-folded t))
+        org-startup-folded t)
+  :bind
+  (:map org-mode-map
+        ("C-j" . nil)))
 
 ;;; 2 - External Packages
 
@@ -149,6 +185,8 @@
 (use-package avy
   :bind
   (:map u-map
+        ("C-s" . avy-goto-word-or-subword-1)
+        ("C-f" . avy-goto-char-timer)
         ("C-l" . avy-goto-line)
         ("c l" . avy-copy-line)
         ("c r" . avy-copy-region)
@@ -183,7 +221,7 @@
   (dirvish-override-dired-mode)
   :bind
   (:map dirvish-mode-map
-        ("C-j C-s" . dirvish-layout-toggle)))
+        ("C-j C-t" . dirvish-layout-toggle)))
 
 ;; Persistent buffer configurations.
 (use-package workgroups2
@@ -204,6 +242,14 @@
   :hook (emacs-startup)
   :config
   (which-key-setup-side-window-right-bottom))
+
+;; Center text files instead left-justifying.
+(use-package writeroom-mode
+  :init
+  (setq writeroom-major-modes '(text-mode conf-mode prog-mode)
+        writeroom-mode-line t
+        writeroom-width 100)
+  (global-writeroom-mode))
 
 ;;; - - Minibuffer
 
@@ -234,6 +280,12 @@
         ("e n" . flymake-goto-next-error)
         ("e p" . flymake-goto-prev-error)))
 
+;; Visit previously committed verisons of the current file.
+(use-package git-timemachine
+  :bind
+  (:map u-map
+        ("v t" . git-timemachine)))
+
 ;; Highlight typical todo keywords (FIXME, TODO, etc.)
 (use-package hl-todo
   :hook (prog-mode))
@@ -244,7 +296,7 @@
   :config
   (setq magit-display-buffer-function 'magit-display-buffer-same-window-except-diff-v1))
 
-;; Pluggable code autoformat - noop placeholder here, each language is configured individually.
+;; Pluggable code autoformat - nop placeholder here, each language is configured individually.
 (use-package reformatter
   :defer t)
 
@@ -310,7 +362,7 @@
   :config
   (add-hook 'yaml-mode-hook 'display-line-numbers-mode))
 
-;;; 3 - Local Overrides
+;;; 3 - Load Local Overrides
 
 ;; load all .el files in $HOME/.config/emacs
 (let* ((local-config-dir "~/.config/emacs"))
