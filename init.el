@@ -279,7 +279,8 @@
   :init
   (setq writeroom-major-modes '(text-mode conf-mode prog-mode)
         writeroom-mode-line t
-        writeroom-width 100)
+        writeroom-width 100
+        writeroom-maximize-window nil)
   (global-writeroom-mode))
 
 ;; Highlight mutating changes.
