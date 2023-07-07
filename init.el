@@ -10,9 +10,9 @@
 ;;;
 ;;; Code:
 
-;;; 0 - Bootstrapping:
+;;; Bootstrapping:
 
-;; - - Package Management
+;; - Package Management
 ;; Use straight.el, instead of package.el, as the package manager.
 ;; https://github.com/radian-software/straight.el#getting-started
 (defvar bootstrap-version)
@@ -31,7 +31,7 @@
     (straight-use-package 'use-package))
 (setq straight-use-package-by-default t)
 
-;; - - Garbage Collection
+;; - Garbage Collection
 ;; `gcmh-mode` actively manages the memory usage threshold to trigger garbage
 ;; collection (`gc-cons-threshold`/`gc-cons-percentage`), with the intent to
 ;; trigger gcs while idling.
@@ -48,7 +48,7 @@
 (use-package gcmh
   :hook (emacs-startup))
 
-;; - - User Prefix(es)
+;; - User Prefix(es)
 ;; Create a dedicated user keymap.
 ;; The C-c keymap is assumed to be available for use by many 3p packages; this
 ;; is a properly isolated version of C-c.
@@ -56,19 +56,18 @@
 (define-prefix-command 'u-map)
 (global-set-key (kbd "C-j") u-map)
 
-;; - - UI
+;; - UI
 ;; Rendering UI is one of the heavier tasks at startup. Frontload it to avoid
 ;; weird visuals at launch.
 (menu-bar-mode -1)
 (set-display-table-slot standard-display-table 'vertical-border (make-glyph-code ?│))
-
-;; TODO: get this into a use-package declaration
-;; I tried to translate this and it didn't work for some reason.
+;; TODO: convert this to a use-package declaration -  I tried the obvious way
+;; and it didn't work for some reason.
 (straight-use-package
- '(nox
+ '(glitch
    :type git
-   :repo "https://github.com/psiphe/nox-theme"))
-(load-theme 'nox t)
+   :repo "https://github.com/psiphe/glitch-theme"))
+(load-theme 'glitch t)
 
 (use-package doom-modeline
   :hook (emacs-startup))
@@ -118,7 +117,7 @@
         ("t t" . centaur-tabs-toggle-groups)
         ("t s" . centaur-tabs-switch-group)))
 
-;;; 1 - Emacs Builtins
+;;; Emacs Builtins
 
 (setq-default compilation-scroll-output t
               fill-column 80
@@ -161,6 +160,8 @@
 (define-key u-map (kbd "C-n") 'winner-redo)
 (define-key u-map (kbd "C-p") 'winner-undo)
 (define-key u-map (kbd "C-k") 'kill-current-buffer)
+(define-key u-map (kbd "C-o") (lambda()(interactive)(set-mark-command 1)))
+(define-key u-map (kbd "C-d") 'zap-up-to-char)
 
 (use-package dired
   :straight (:type built-in)
@@ -172,14 +173,25 @@
   :straight (:type built-in)
   :config
   (setq org-hide-emphasis-markers t
-        org-startup-folded t)
+        org-pretty-entities t
+        org-startup-folded t
+        org-todo-keywords '((sequence "TODO(t)" "CURR(c)" "REVW(r)" "WAIT(w)"
+                                      "|"
+                                      "DONE(d)")))
   :bind
   (:map org-mode-map
         ("C-j" . nil)))
 
-;;; 2 - External Packages
+;;; External Packages
 
-;;; - - Editing & Navigation
+;;; - Editing & Navigation
+
+;; Better switch-buffer.
+(use-package ace-window
+  :config
+  (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+  :bind
+  ("C-x o" . ace-window))
 
 ;; Hotkey based editing commands.
 (use-package avy
@@ -192,6 +204,12 @@
         ("c r" . avy-copy-region)
         ("k l" . avy-kill-whole-line)
         ("k r" . avy-kill-region)))
+
+;; Like vim ci
+(use-package change-inner
+  :bind
+  (:map u-map
+        ("TAB" . change-inner)))
 
 ;; Pluggable autocompletion.
 (use-package company
@@ -211,6 +229,8 @@
   :hook (completion-list-mode . consult-preview-at-point-mode)
   :bind
   (:map global-map
+        ("M-8" . consult-register-store) ; hack: mapped in iterm to C-;
+        ("M-9" . consult-register) ; hack: mapped in iterm to C-'
         ("C-x b" . consult-buffer)
         ("C-x p b" . consult-project-buffer)
         ("M-y" . consult-yank-pop)))
@@ -222,6 +242,17 @@
   :bind
   (:map dirvish-mode-map
         ("C-j C-t" . dirvish-layout-toggle)))
+
+;; A grep-based xref backend.
+(use-package dumb-jump
+  :init
+  (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
+
+;; Highlight around the cursor.
+(use-package expand-region
+  :bind
+  (:map u-map
+        ("C-e" . er/expand-region)))
 
 ;; Persistent buffer configurations.
 (use-package workgroups2
@@ -251,7 +282,12 @@
         writeroom-width 100)
   (global-writeroom-mode))
 
-;;; - - Minibuffer
+;; Highlight mutating changes.
+(use-package volatile-highlights
+  :init
+  (volatile-highlights-mode 1))
+
+;;; - Minibuffer
 
 ;; Show documentation in the minibuffer margin.
 (use-package marginalia
@@ -261,9 +297,9 @@
 (use-package vertico
   :hook (emacs-startup))
 
-;;; - - Coding Support
-;; - As most of their config depends on these common packages, specific
-;;   programming language support is split out further down.
+;;; - Coding Support
+;; As most of their config depends on these common packages, specific
+;; programming language support is split out further down.
 
 ;; On-the-fly syntax checking & linting.
 (use-package flymake
@@ -296,6 +332,11 @@
   :config
   (setq magit-display-buffer-function 'magit-display-buffer-same-window-except-diff-v1))
 
+(use-package magit-todos
+  :after (magit)
+  :init
+  (magit-todos-mode 1))
+
 ;; Pluggable code autoformat - nop placeholder here, each language is configured individually.
 (use-package reformatter
   :defer t)
@@ -311,7 +352,32 @@
 (use-package tree-sitter-langs
   :after (tree-sitter))
 
-;;; - - Programming Language (& Config Format) Support
+;;; Org Extensions
+
+(use-package org-modern
+  :init
+  (with-eval-after-load 'org (global-org-modern-mode))
+  :config
+  ;; TODO put this into the theme
+  (setq org-modern-todo-faces
+        '(("TODO" :background "#37363f" :foreground "#e0af68" :weight bold)
+          ("CURR" :background "#273644" :foreground "#4c9e8a" :weight bold)
+          ("REVW" :background "#192a4d" :foreground "#7aa2f7" :weight bold)
+          ("WAIT" :background "#342c3c" :foreground "#f7768e" :weight bold)
+          ("DONE" :background "#1f2335" :foreground "#313750" :weight bold))))
+
+(use-package org-roam
+  :bind
+  (:map u-map
+        ("o n" . org-roam-node-find))
+  :config
+  (let* ((roam-dir org-directory))
+    (unless (file-exists-p roam-dir)
+      (make-directory roam-dir))
+    (setq org-roam-directory (file-truename roam-dir))
+    (org-roam-db-autosync-mode)))
+
+;;; Programming Language (& Config Format) Support
 
 ;; C
 (setq c-basic-offset 4)
@@ -362,7 +428,7 @@
   :config
   (add-hook 'yaml-mode-hook 'display-line-numbers-mode))
 
-;;; 3 - Load Local Overrides
+;;; Load Local Overrides
 
 ;; load all .el files in $HOME/.config/emacs
 (let* ((local-config-dir "~/.config/emacs"))

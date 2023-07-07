@@ -11,13 +11,13 @@
 alias MAC='[ "$(uname -s)" = "Darwin" ]'
 alias LINUX='[ "$(uname -s)" = "Linux" ]'
 
-# 0 - Package Management
+# Package Management
 
 MAC && BREW_ROOT="/opt/homebrew"
 LINUX && BREW_ROOT="/home/linuxbrew/.linuxbrew"
 [ -f "$BREW_ROOT/bin/brew" ] && eval $($BREW_ROOT/bin/brew shellenv)
 
-# 1 - Builtins
+# Builtins
 
 shopt -s histappend
 MAC && export BASH_SILENCE_DEPRECATION_WARNING=1
@@ -92,7 +92,7 @@ __prompt()
 
 PROMPT_COMMAND=__prompt
 
-# 2 - Transient Environment
+# Transient Environment
 
 TRANSIENT_CONFIG="$HOME/.config/bash/transient.sh"
 [ -f "$TRANSIENT_CONFIG" ] && . "$TRANSIENT_CONFIG"
@@ -131,7 +131,7 @@ tb() {
     echo "$1->$2" >> "$TRANSIENT_BOOKMARKS"
 }
 
-# 3 - External Packages
+# External Packages
 
 # fzf
 configure_fzf() {
@@ -169,17 +169,20 @@ configure_fzf() {
 
     alias ftbl="cat $TRANSIENT_BOOKMARKS | fzf -m"
 }
+
 if command -v fzf &>/dev/null; then
     configure_fzf
 fi
 
 # tmux
-alias tma="tmux attach"
-alias tmks="tmux kill-session -t"
-alias tmls="tmux list-sessions"
-alias tmns="tmux new-session -As"
+if command -v tmux &>/dev/null; then
+    alias tma="tmux attach"
+    alias tmks="tmux kill-session -t"
+    alias tmls="tmux list-sessions"
+    alias tmns="tmux new-session -As"
+fi
 
-# 4 - Local Overrides
+# Local Overrides
 
 for machine_module in "$HOME/.config/bash/"*; do
     [ -f "$machine_module" ] && . "$machine_module"
