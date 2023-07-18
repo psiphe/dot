@@ -1,33 +1,26 @@
 # -*-sh-*-
 # shellcheck shell=bash
-#
-# Divided into sections:
-# * Package Management
-# * Builtins
-# * Transient Environment
-# * External Packages
-# * Local Overrides
 
-alias MAC='[ "$(uname -s)" = "Darwin" ]'
-alias LINUX='[ "$(uname -s)" = "Linux" ]'
+_os=$(uname -s | tr '[:upper:]' '[:lower:]')
+alias _mac='[ "$_os" = "darwin" ]'
+alias _linux='[ "$_os" = "linux" ]'
 
-# Package Management
+mkdir -p "$HOME/.config/bash" # assumed to exist below
 
-MAC && BREW_ROOT="/opt/homebrew"
-LINUX && BREW_ROOT="/home/linuxbrew/.linuxbrew"
-[ -f "$BREW_ROOT/bin/brew" ] && eval $($BREW_ROOT/bin/brew shellenv)
+# = Package Management =
 
-# Builtins
+_mac && brew_root="/opt/homebrew"
+_linux && brew_root="/home/linuxbrew/.linuxbrew"
+[ -n "$brew_root" ] && [ -f "$brew_root/bin/brew" ] && eval "$("$brew_root"/bin/brew shellenv)"
+
+# = Builtins =
 
 shopt -s histappend
-MAC && export BASH_SILENCE_DEPRECATION_WARNING=1
 export HISTSIZE=5000
-export EDITOR="vim"
-export VISUAL="vim"
-if command -v emacs &>/dev/null; then
-    export EDITOR="emacs"
-    export VISUAL="emacs"
-fi
+_mac && export BASH_SILENCE_DEPRECATION_WARNING=1
+
+export EDITOR="vim" && export VISUAL="vim"
+command -v emacs &>/dev/null && export EDITOR="emacs" && export VISUAL="emacs"
 
 alias e='$EDITOR'
 alias f="find . -type f -name"
@@ -50,60 +43,52 @@ alias gdc="git diff --cached" # show staged diff
 alias gl="git log"
 alias gs="git status"
 
-# dynamic prompt
-BLACK_FG="\[\e[0;30m\]"
-RED_FG="\[\e[31m\]"
-GREEN_FG="\[\e[32m\]"
-YELLOW_FG="\[\e[33m\]"
-ENDCOLOR="\[\e[0m\]"
-DEFAULT_FG="$BLACK_FG"
+# = Prompt =
 
-__active_git_branch()
+black_fg="\[\e[0;30m\]"
+green_fg="\[\e[32m\]"
+red_fg="\[\e[31m\]"
+yellow_fg="\[\e[33m\]"
+endcolor="\[\e[0m\]"
+
+_active_git_branch()
 {
-    if ! git branch &>/dev/null; then
-        return
-    fi
-
-    # yellow if there are uncommitted changes
-    display_color="$GREEN_FG"
-    if ! git diff --exit-code &>/dev/null; then
-        display_color="$YELLOW_FG"
-    fi
-
+    ! git branch &>/dev/null && return
+    # green by default, yellow if there are uncommitted changes
+    display_color="$green_fg"
+    ! git diff --exit-code &>/dev/null && display_color="$yellow_fg"
     # parse the current branch
     branch=$(git branch 2>/dev/null | sed '/^[^*]/d' | sed -r 's/[* ]+//g')
     echo "${display_color}[$branch]"
 }
 
-__prompt()
+_prompt()
 {
     prevexit="$?"
-
-    # print non-zero error codes in red
+    # clear the previous prompt
     PS1=""
-    if [ $prevexit -ne 0 ]; then
-        PS1="${RED_FG}[$prevexit]"
-    fi
-
-    PS1+="$(__active_git_branch)"
-    PS1+="$DEFAULT_FG:/\w $ "
-    PS1+="$ENDCOLOR"
+    # print non-zero exit codes
+    [ $prevexit -ne 0 ] && PS1="${red_fg}[$prevexit]"
+    PS1+=$(_active_git_branch)
+    PS1+="$black_fg:/\w $ "
+    PS1+="$endcolor"
 }
 
-PROMPT_COMMAND=__prompt
+PROMPT_COMMAND=_prompt # bash evaluates $PROMPT_COMMAND before each new prompt
 
-# Transient Environment
+# = Transient Environment =
+# Convenience aliases & functions to modify the shell environment on the fly,
+# and persist the changes across sessions.
 
-TRANSIENT_CONFIG="$HOME/.config/bash/transient.sh"
-[ -f "$TRANSIENT_CONFIG" ] && . "$TRANSIENT_CONFIG"
-TRANSIENT_BOOKMARKS="$HOME/.transient_bookmarks"
+# Used to store on-the-fly changes; effectively part of bashrc.
+transient_config="$HOME/.config/bash/transient.sh"
+# shellcheck source=/dev/null
+# explicitly check `-f`; ignore SC1090 - can't follow non-constant source
+[ -f "$transient_config" ] && . "$transient_config"
 
-alias tacl="> $TRANSIENT_CONFIG"
-alias tbcl="> $TRANSIENT_BOOKMARKS"
-alias tae="$EDITOR $TRANSIENT_CONFIG"
-alias tbe="$EDITOR $TRANSIENT_BOOKMARKS"
-alias tal="cat $TRANSIENT_CONFIG"
-alias tbl="cat $TRANSIENT_BOOKMARKS"
+alias te='"$EDITOR" $transient_config'
+alias tecl='> "$transient_config"'
+alias tel='cat "$transient_config"'
 
 # Create a new alias named $1, equal to $2
 # $1: name of the alias
@@ -111,35 +96,47 @@ alias tbl="cat $TRANSIENT_BOOKMARKS"
 ta() {
     [ -z "$1" ] && echo "missing the name of the alias" && return
     [ -z "$2" ] && echo "missing the value of the alias" && return
-    echo "alias $1=\"$2\"" >> "$TRANSIENT_CONFIG"
-    . "$TRANSIENT_CONFIG"
+    echo "alias $1=\"$2\"" >> "$transient_config"
+    # shellcheck source=/dev/null
+    # explicitly check `-f`; ignore SC1090 - can't follow non-constant source
+    . "$transient_config"
 }
 
 # Create a new alias named $1 to cd into $(pwd)
 # $1: name of the alias
-tacd() {
+tcd() {
     [ -z "$1" ] && echo "missing the name of the alias" && return
-    ta $1 "cd $(pwd)"
+    ta "$1" "cd $(pwd)"
 }
 
-# Push a new bookmark
-# $1: bookmark name
-# $2: url
-tb() {
-    [ -z "$1" ] && echo "missing the name of the bookmark" && return
-    [ -z "$2" ] && echo "missing the url of the bookmark" && return
-    echo "$1->$2" >> "$TRANSIENT_BOOKMARKS"
-}
+# = Optional Dependencies =
 
-# External Packages
+# == fzf ==
+# A general purpose fuzzy finder; useful for creating interactive bindings
+# for command line programs.
+#
+# e.g. `cd $(find . -type d | fzf)` - interactively `cd` into a directory
 
-# fzf
-configure_fzf() {
-    [ -f ~/.fzf.bash ] && source ~/.fzf.bash # completions
-    # TODO: pull the theme out
+if command -v fzf &>/dev/null; then
+    # shellcheck source=/dev/null
+    # explicitly check `-f`; ignore SC1090 - can't follow non-constant source
+    [ -f "$HOME/.fzf.bash" ] && source ~/.fzf.bash # completions
+
+    export FZF_COMPLETION_TRIGGER='jk' # jk<TAB> will trigger fzf completion
+    # - Emacs-like scroll-up & scroll down (C-v/M-v)
+    # - Glitch-theme
     export FZF_DEFAULT_OPTS="\
         --border \
         --bind ctrl-v:preview-half-page-down,alt-v:preview-half-page-up \
+        --header-first \
+        --height=40% \
+        --layout=reverse \
+        --marker='> ' \
+        --no-hscroll \
+        --no-mouse \
+        --pointer=' >' \
+        --prompt='$ ' \
+        --tabstop=4 \
         --color=bg+:#292e42 \
         --color=bg:#24283b \
         --color=border:#414868 \
@@ -153,37 +150,134 @@ configure_fzf() {
         --color=pointer:#c0caf5 \
         --color=prompt:#7aa2f7 \
         --color=spinner:#f2d5cf \
-        --header-first
-        --height=40% \
-        --layout=reverse \
-        --marker='> ' \
-        --no-hscroll \
-        --no-mouse \
-        --pointer=' >' \
-        --prompt='$ ' \
-        --tabstop=4 \
     "
+
+    # By default fzf.bash defines three keybindings:
+    # - alt-c:  fuzzy cd
+    # - ctrl-r: fuzzy history search
+    # - ctrl-t: fuzzy file select
+    #
+    # Pass additional fzf options via FZF_[ALT_C|CTRL_R|CTRL_T]_OPTS.
     export FZF_ALT_C_OPTS="--header='CD'"
     export FZF_CTRL_R_OPTS="--header='BASH HISTORY'"
-    export FZF_CTRL_T_OPTS="--header='FILES' --bind 'enter:become(emacs {})'" # TODO: open in $EDITOR
+    export FZF_CTRL_T_OPTS="--header='FILES' --bind 'enter:become($EDITOR {})'"
 
-    alias ftbl="cat $TRANSIENT_BOOKMARKS | fzf -m"
-}
+    # === fuzzy builtins === #
 
-if command -v fzf &>/dev/null; then
-    configure_fzf
+    # Fuzzy edit.
+    # $1: Directory to search, default to current directory.
+    fe() {
+        local files dir
+        dir=${1:-*}
+        # shellcheck disable=2086
+        # The default '*' is set to perform glob expansion.
+        files=$(find $dir -type f | fzf --multi --select-1 --exit-0) || return $?
+        # shellcheck disable=2086
+        # Word splitting is required here to pass multiple arguments.
+        $EDITOR $files
+    }
+
+    # Fuzzy edit a file in $HOME/.config/
+    fec() {
+        fe "$HOME/.config/"
+    }
+
+    # Fuzzy select an alias.
+    fal() {
+        local transient_alias
+        transient_alias=$(alias | fzf --header='ALL ALIASES' --exit-0 --select-1) || return $?
+        eval "$(echo "$transient_alias" | sed  "s/\"/'/g" | awk -F"'" '{print $2}')"
+    }
+
+    # Fuzzy grep.
+    # fg() {
+
+    #     # grep --line-buffered --color=never -r "" * | fzf
+    # }
+
+    # Fuzzy select a manpage, with a preview window.
+    # TODO the preview doesn't respect the man section
+    fman() {
+        local manpage
+        manpage=$(man -P "less -sR" -k . | \
+                      fzf --ansi --preview='man ' --header='MAN PAGES' \
+                          --preview="echo {} | cut -d' ' -f 1 | tr -d ')' | cut -d'(' -f 1 | xargs -r man") || return $?
+        man -S "$(echo "$manpage" | cut -d' ' -f 1 | tr -d ')' | cut -d'(' -f 2)" "$(echo "$manpage" | cut -d' ' -f 1 | tr -d ')' | cut -d'(' -f 1)"
+    }
+
+    # === fuzzy transient environment === #
+
+    # Fuzzy select a transient alias.
+    ftl() {
+        local transient_alias
+        transient_alias=$(fzf --header='TRANSIENT ALIASES'--select-1 --exit-0 < "$transient_config") || return $?
+        eval "$(echo "$transient_alias" | sed  "s/\"/'/g" | awk -F"'" '{print $2}')"
+    }
+
+    # === fuzzy git === #
+
+    # Fuzzy git branch (checkout).
+    fgb() {
+        local branch
+        branch=$(git branch 2>/dev/null | sed -r 's/[* ]+//g' | \
+                     fzf --prompt='git checkout ' --header='GIT BRANCHES' --exit-0 \
+                         --preview="git log --color=always \
+                         --format='%C(auto)%h%d %s %C(black)%C(bold)%cr% C(auto)%an' {}") || return $?
+        git checkout "$branch"
+    }
+
+    # Fuzzy git log, with commit diff previews.
+    fgl() {
+        local commit
+        commit=$(git log --color=always --format="%C(auto)%h%d %s %C(black)%C(bold)%cr% C(auto)%an" 2>/dev/null | \
+                     fzf --prompt='git checkout ' --header='GIT LOG' --exit-0 --no-sort --reverse --ansi --height=80% \
+                         --preview="\
+                            echo {} | grep -o '[a-f0-9]\{7\}' | head -1 | \
+                            xargs -I % sh -c 'git show --color=always %'") || return $?
+        # shellcheck disable=2001
+        # Prefer to use portable options when possible.
+        git checkout "$(echo "$commit" | sed "s/ .*//")"
+    }
+
+    # === fuzzy tmux === #
+
+    if command -v tmux &>/dev/null; then
+        # Fuzzy attach to a tmux session.
+        ftma() {
+            local session
+            session=$(tmux list-sessions | fzf --prompt='tmux attach -t ' --header='TMUX SESSIONS' --select-1 --exit-0) || return $?
+            tmux attach -t "$(echo "$session" | cut -d":" -f 1)"
+        }
+
+        # Fuzzy select tmux sessions to kill.
+        ftmk() {
+            local sessions
+            sessions=$(tmux list-sessions | fzf --prompt='tmux kill-session -t ' --header='TMUX SESSIONS'--exit-0 --multi) || return $?
+            while IFS= read -r session ; do
+                tmux kill-session -t "$(echo "$session" | cut -d":" -f 1)"
+            done <<< "$sessions"
+        }
+
+        alias ftml=ftma # Sometimes I type ftmls
+    fi
 fi
 
-# tmux
+# == tmux ==
+
 if command -v tmux &>/dev/null; then
     alias tma="tmux attach"
-    alias tmks="tmux kill-session -t"
-    alias tmls="tmux list-sessions"
-    alias tmns="tmux new-session -As"
+    alias tmk="tmux kill-session -t"
+    alias tml="tmux list-sessions"
+    alias tmn="tmux new-session -As"
 fi
 
-# Local Overrides
+# = Local Configuration =
+# Consider everything in $HOME/.config/bash as additional shell configuration.
+# Source these last so that any conflicting local configuration takes
+# precedence over the defaults provided here.
 
-for machine_module in "$HOME/.config/bash/"*; do
-    [ -f "$machine_module" ] && . "$machine_module"
+for local_config in "$HOME/.config/bash/"*; do
+    # shellcheck source=/dev/null
+    # explicitly check `-f`; ignore SC1090 - can't follow non-constant source
+    [ -f "$local_config" ] && . "$local_config"
 done

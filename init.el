@@ -205,6 +205,12 @@
         ("k l" . avy-kill-whole-line)
         ("k r" . avy-kill-region)))
 
+;; Flash the cursor when jumping around
+(use-package beacon
+  :init
+  (setq beacon-color "#4c9e8a")
+  (beacon-mode 1))
+
 ;; Like vim ci
 (use-package change-inner
   :bind
