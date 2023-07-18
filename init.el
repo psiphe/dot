@@ -10,9 +10,9 @@
 ;;;
 ;;; Code:
 
-;;; Bootstrapping:
+;;; = Bootstrapping =
 
-;; - Package Management
+;; == Package Management ==
 ;; Use straight.el, instead of package.el, as the package manager.
 ;; https://github.com/radian-software/straight.el#getting-started
 (defvar bootstrap-version)
@@ -31,37 +31,39 @@
     (straight-use-package 'use-package))
 (setq straight-use-package-by-default t)
 
-;; - Garbage Collection
+;; == Garbage Collection ==
 ;; `gcmh-mode` actively manages the memory usage threshold to trigger garbage
 ;; collection (`gc-cons-threshold`/`gc-cons-percentage`), with the intent to
 ;; trigger gcs while idling.
 ;;
 ;; `gc-cons-threshold` is set excessively high in `early-init.el` to load Emacs
-;; faster by avoiding gcs. `gcmh-mode` starts as soon as config is finished
+;; faster by avoiding gcs. `gcmh-mode` starts as soon as the config is finished
 ;; loading on the `emacs-startup-hook`, and should reset the thresholds to values
 ;; that don't result in memory pressure (fingers crossed).
 ;;
-;; The thresholds do not need to be dynamic, and it should be equally reasonable
+;; The thresholds do not need to be dynamic, and it should be similarly reasonable
 ;; to find static values that work well for the hardware. Lsp-mode has a few
 ;; suggestions on how to do that:
 ;; - https://emacs-lsp.github.io/lsp-mode/page/performance/#adjust-gc-cons-threshold
 (use-package gcmh
   :hook (emacs-startup))
 
-;; - User Prefix(es)
+;; == User Prefix(es) ==
 ;; Create a dedicated user keymap.
-;; The C-c keymap is assumed to be available for use by many 3p packages; this
-;; is a properly isolated version of C-c.
+;; The `C-c` keymap is used by many builtin & external packages. This is an
+;; isolated keymap that *should* be globally available (some major modes
+;; use the `C-j` binding, and therefore need to have `C-j` unbound - see org
+;; configuration for an example).
 (defvar u-map)
 (define-prefix-command 'u-map)
 (global-set-key (kbd "C-j") u-map)
 
-;; - UI
+;; == UI ==
 ;; Rendering UI is one of the heavier tasks at startup. Frontload it to avoid
 ;; weird visuals at launch.
 (menu-bar-mode -1)
 (set-display-table-slot standard-display-table 'vertical-border (make-glyph-code ?│))
-;; TODO: convert this to a use-package declaration -  I tried the obvious way
+;; TODO: convert this to a use-package declaration - I tried the obvious way
 ;; and it didn't work for some reason.
 (straight-use-package
  '(glitch
@@ -117,7 +119,7 @@
         ("t t" . centaur-tabs-toggle-groups)
         ("t s" . centaur-tabs-switch-group)))
 
-;;; Emacs Builtins
+;;; = Emacs Builtins =
 
 (setq-default compilation-scroll-output t
               fill-column 80
@@ -125,7 +127,7 @@
               tab-width 4
               truncate-lines nil)
 
-(setq completion-styles '(basic partial-completion flex)                                                 ; minibuffer filtering
+(setq completion-styles '(basic partial-completion flex) ; minibuffer filtering
       kill-buffer-query-functions (delq 'process-kill-buffer-query-function kill-buffer-query-functions) ; do not prompt to kill live process buffers
       make-backup-files nil)
 
@@ -182,9 +184,9 @@
   (:map org-mode-map
         ("C-j" . nil)))
 
-;;; External Packages
+;;; = External Packages =
 
-;;; - Editing & Navigation
+;;; == Editing & Navigation ==
 
 ;; Better switch-buffer.
 (use-package ace-window
@@ -294,7 +296,7 @@
   :init
   (volatile-highlights-mode 1))
 
-;;; - Minibuffer
+;;; == Minibuffer ==
 
 ;; Show documentation in the minibuffer margin.
 (use-package marginalia
@@ -304,7 +306,7 @@
 (use-package vertico
   :hook (emacs-startup))
 
-;;; - Coding Support
+;;; == Coding Support ==
 ;; As most of their config depends on these common packages, specific
 ;; programming language support is split out further down.
 
@@ -384,7 +386,7 @@
     (setq org-roam-directory (file-truename roam-dir))
     (org-roam-db-autosync-mode)))
 
-;;; Programming Language (& Config Format) Support
+;;; = Programming Language (& Config Format) Support =
 
 ;; C
 (setq c-basic-offset 4)
