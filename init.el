@@ -190,6 +190,7 @@
 
 ;; Hotkey based search / edit.
 (use-package avy
+  :demand t
   :config
   (setq avy-keys '(?j ?f ?s ?k ?l))
   :bind
@@ -261,7 +262,10 @@
 
 (use-package evil
   :init
-  (evil-mode 1))
+  (evil-mode 1)
+  :config
+  (with-eval-after-load 'avy
+    (evil-global-set-key 'normal (kbd "s") 'avy-goto-word-or-subword-1)))
 
 ;; Select around the cursor by semantic units
 (use-package expand-region
