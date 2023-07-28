@@ -1,19 +1,12 @@
 ;;; init.el --- Emacs configuration.
-;;;
+
 ;;; Commentary:
-;; Divided into sections:
-;; * Bootstrapping
-;;   - "System" configuration; package management, gc config, the like.
-;; * Emacs Builtins
-;; * External Packages
-;; * Load Local Overrides
-;;;
+
 ;;; Code:
 
-;;; = Bootstrapping =
+;;;; Bootstrapping:
 
-;; == Package Management ==
-;; Use straight.el, instead of package.el, as the package manager.
+;; Use straight.el instead of package.el as the package manager.
 ;; https://github.com/radian-software/straight.el#getting-started
 (defvar bootstrap-version)
 (let ((bootstrap-file
@@ -27,19 +20,33 @@
       (goto-char (point-max))
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
-(if (version< emacs-version "30.0") ; before use-package was builtin
+(if (version< emacs-version "30.0")     ; before use-package was builtin
     (straight-use-package 'use-package))
 (setq straight-use-package-by-default t)
 
-;; == Garbage Collection ==
+;; Create a dedicated user keymap.
+;; The `C-c` keymap is used by many builtin & external packages. This is an
+;; isolated keymap that *should* be globally available (some major modes
+;; bind `C-j`, in which case you need to unbind it - see the org
+;; configuration for an example).
+(defvar u-map)
+(defvar u-map/vc)
+(defvar u-map/unlikely)
+(define-prefix-command 'u-map)
+(define-prefix-command 'u-map/vc)
+(define-prefix-command 'u-map/unlikely)
+(global-set-key (kbd "C-j") u-map)
+(define-key u-map (kbd "v") u-map/vc)
+(define-key u-map (kbd "C-u") u-map/unlikely)
+
 ;; `gcmh-mode` actively manages the memory usage threshold to trigger garbage
-;; collection (`gc-cons-threshold`/`gc-cons-percentage`), with the intent to
+;; collection (`gc-cons-threshold`/`gc-cons-percentage`) with the intent to
 ;; trigger gcs while idling.
 ;;
 ;; `gc-cons-threshold` is set excessively high in `early-init.el` to load Emacs
-;; faster by avoiding gcs. `gcmh-mode` starts as soon as the config is finished
-;; loading on the `emacs-startup-hook`, and should reset the thresholds to values
-;; that don't result in memory pressure (fingers crossed).
+;; faster by avoiding gcs. `gcmh-mode` starts as soon as init.el is loaded
+;; on the `emacs-startup-hook`, and should reset the thresholds to values
+;; that don't result in memory pressure.
 ;;
 ;; The thresholds do not need to be dynamic, and it should be similarly reasonable
 ;; to find static values that work well for the hardware. Lsp-mode has a few
@@ -48,41 +55,19 @@
 (use-package gcmh
   :hook (emacs-startup))
 
-;; == User Prefix(es) ==
-;; Create a dedicated user keymap.
-;; The `C-c` keymap is used by many builtin & external packages. This is an
-;; isolated keymap that *should* be globally available (some major modes
-;; use the `C-j` binding, and therefore need to have `C-j` unbound - see org
-;; configuration for an example).
-(defvar u-map)
-(define-prefix-command 'u-map)
-(global-set-key (kbd "C-j") u-map)
+;;;; UI:
 
-;; == UI ==
-;; Rendering UI is one of the heavier tasks at startup. Frontload it to avoid
-;; weird visuals at launch.
 (menu-bar-mode -1)
 (set-display-table-slot standard-display-table 'vertical-border (make-glyph-code ?│))
-;; TODO: convert this to a use-package declaration - I tried the obvious way
-;; and it didn't work for some reason.
-(straight-use-package
- '(glitch
-   :type git
-   :repo "https://github.com/psiphe/glitch-theme"))
-(load-theme 'glitch t)
+
+(use-package glitch-theme
+  :straight (:type git :repo "https://github.com/psiphe/glitch-theme")
+  :init
+  (load-theme 'glitch t))
 
 (use-package doom-modeline
   :hook (emacs-startup))
 
-;; Just as compatible as `all-the-icons` + terminal support. Enables
-;; glyphs for `centaur-tabs`, `dired`, `mode-line`, etc.
-;; REQUIRES A NERD FONT: https://github.com/ryanoasis/nerd-fonts
-(use-package nerd-icons)
-(use-package nerd-icons-dired
-  :hook
-  (dired-mode . nerd-icons-dired-mode))
-
-;; A nice looking tabbar.
 (use-package centaur-tabs
   :init
   (setq centaur-tabs-set-icons t)
@@ -113,13 +98,17 @@
                               )))
       "Meta")
       (t
-       (centaur-tabs-get-group-name (current-buffer))))))
-  :bind
-  (:map u-map
-        ("t t" . centaur-tabs-toggle-groups)
-        ("t s" . centaur-tabs-switch-group)))
+       (centaur-tabs-get-group-name (current-buffer)))))))
 
-;;; = Emacs Builtins =
+;; Enables icons via unicode glyphs. A replacement for `all-the-icons` with
+;; terminal support.
+;; REQUIRES A NERD FONT: https://github.com/ryanoasis/nerd-fonts
+(use-package nerd-icons)
+(use-package nerd-icons-dired
+  :hook
+  (dired-mode . nerd-icons-dired-mode))
+
+;;;; Builtins:
 
 (setq-default compilation-scroll-output t
               fill-column 80
@@ -162,7 +151,6 @@
 (define-key u-map (kbd "C-n") 'winner-redo)
 (define-key u-map (kbd "C-p") 'winner-undo)
 (define-key u-map (kbd "C-k") 'kill-current-buffer)
-(define-key u-map (kbd "C-o") (lambda()(interactive)(set-mark-command 1)))
 (define-key u-map (kbd "C-d") 'zap-up-to-char)
 
 (use-package dired
@@ -177,73 +165,88 @@
   (setq org-hide-emphasis-markers t
         org-pretty-entities t
         org-startup-folded t
-        org-todo-keywords '((sequence "TODO(t)" "CURR(c)" "REVW(r)" "WAIT(w)"
-                                      "|"
-                                      "DONE(d)")))
+        org-todo-keywords '((sequence
+                             "TODO(t)"
+                             "CURR(c)"
+                             "WAIT(w)"
+                             "REVW(r)"
+                             "DEPL(s)"
+                             "|"
+                             "DONE(d)")))
   :bind
   (:map org-mode-map
         ("C-j" . nil)))
 
-;;; = External Packages =
+;;;; Additional Packages:
 
-;;; == Editing & Navigation ==
+;;;;; Editing & Navigation:
 
-;; Better switch-buffer.
+;; Better `other-window`
 (use-package ace-window
   :config
   (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
   :bind
   ("C-x o" . ace-window))
 
-;; Hotkey based editing commands.
+;; Hotkey based search / edit.
 (use-package avy
+  :config
+  (setq avy-keys '(?j ?f ?s ?k ?l))
   :bind
   (:map u-map
-        ("C-s" . avy-goto-word-or-subword-1)
-        ("C-f" . avy-goto-char-timer)
+        ("C-f" . avy-goto-word-or-subword-1)
+        ("C-s" . avy-goto-char-timer)
         ("C-l" . avy-goto-line)
         ("c l" . avy-copy-line)
         ("c r" . avy-copy-region)
         ("k l" . avy-kill-whole-line)
         ("k r" . avy-kill-region)))
 
-;; Flash the cursor when jumping around
-(use-package beacon
-  :init
-  (setq beacon-color "#4c9e8a")
-  (beacon-mode 1))
-
-;; Like vim ci
+;; Like vim `ci`
+;; TODO: replace this with evil
 (use-package change-inner
   :bind
   (:map u-map
-        ("TAB" . change-inner)))
+        ("TAB" . change-inner)
+        ("C-a" . change-outer)))
 
-;; Pluggable autocompletion.
+;; Autocomplete
 (use-package company
   :hook (prog-mode conf-mode)
   :config
-  (setq company-minimum-prefix-length 2
+  (setq company-minimum-prefix-length 1
         company-idle-delay 0))
 
 ;; Builtin commands integrated with `completing-read` + previews.
 (use-package consult
+  :hook (completion-list-mode . consult-preview-at-point-mode)
   :init
   (setq register-preview-delay 0.0
         register-preview-function #'consult-register-format
         xref-show-xrefs-function #'consult-xref
         xref-show-definitions-function #'consult-xref)
   (advice-add #'register-preview :override #'consult-register-window)
-  :hook (completion-list-mode . consult-preview-at-point-mode)
   :bind
   (:map global-map
-        ("M-8" . consult-register-store) ; hack: mapped in iterm to C-;
-        ("M-9" . consult-register) ; hack: mapped in iterm to C-'
+        ("M-8" . consult-register-store)     ; hack: mapped in iterm to C-;
+        ("M-9" . consult-register)           ; hack: mapped in iterm to C-'
         ("C-x b" . consult-buffer)
         ("C-x p b" . consult-project-buffer)
         ("M-y" . consult-yank-pop)))
 
-;; An improved dired interface.
+;; Show version control changes in the margin.
+(use-package diff-hl
+  :hook (prog-mode)
+  :config
+  (add-hook 'diff-hl-mode-hook 'diff-hl-margin-mode)
+  (setq diff-hl-show-staged-changes nil)
+  :bind
+  (:map u-map/vc
+        ("a" . diff-hl-stage-current-hunk)
+        ("n" . diff-hl-next-hunk)
+        ("p" . diff-hl-previous-hunk)))
+
+;; Better dired interface
 (use-package dirvish
   :init
   (dirvish-override-dired-mode)
@@ -251,18 +254,34 @@
   (:map dirvish-mode-map
         ("C-j C-t" . dirvish-layout-toggle)))
 
-;; A grep-based xref backend.
+;; A grep-based xref backend
 (use-package dumb-jump
   :init
-  (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
+  (add-hook 'xref-backend-functions 'dumb-jump-xref-activate))
 
-;; Highlight around the cursor.
+(use-package evil
+  :init
+  (evil-mode 1))
+
+;; Select around the cursor by semantic units
 (use-package expand-region
   :bind
   (:map u-map
         ("C-e" . er/expand-region)))
 
-;; Persistent buffer configurations.
+;; Flash the cursor when jumping around
+;; TODO: fix the color of the pulse
+(use-package pulsar
+  :init
+  (pulsar-global-mode 1)
+  :config
+  (setq pulsar-pulse t)
+  (with-eval-after-load 'ace-window
+    (add-to-list 'pulsar-pulse-functions 'ace-window))
+  (with-eval-after-load 'avy
+    (add-to-list 'pulsar-pulse-functions 'avy-goto-line)))
+
+;; Persistent buffer configurations
 (use-package workgroups2
   :config
   (setq wg-session-file (concat user-emacs-directory "/.emacs_workgroups"))
@@ -272,31 +291,34 @@
         ("w k" . wg-kill-workgroup)
         ("w f" . wg-open-workgroup)))
 
-;; Automatically remove extra whitespace.
+;; Automatically remove extra whitespace
 (use-package whitespace-cleanup-mode
-  :hook (prog-mode conf-mode))
+  :hook (prog-mode conf-mode)
+  :bind
+  (:map u-map/unlikely
+        ("w s" . whitespace-cleanup)))
 
-;; Mid-keystroke popup showing all possible completions.
+;; Mid-keystroke popup showing all possible completions
 (use-package which-key
   :hook (emacs-startup)
   :config
   (which-key-setup-side-window-right-bottom))
 
-;; Center text files instead left-justifying.
+;; Center text instead of left-justifying.
 (use-package writeroom-mode
   :init
   (setq writeroom-major-modes '(text-mode conf-mode prog-mode)
         writeroom-mode-line t
-        writeroom-width 100
+        writeroom-width 120
         writeroom-maximize-window nil)
   (global-writeroom-mode))
 
-;; Highlight mutating changes.
+;; Highlight mutating changes (e.g. undo)
 (use-package volatile-highlights
   :init
   (volatile-highlights-mode 1))
 
-;;; == Minibuffer ==
+;;;; Minibuffer:
 
 ;; Show documentation in the minibuffer margin.
 (use-package marginalia
@@ -313,17 +335,11 @@
 ;; On-the-fly syntax checking & linting.
 (use-package flymake
   :straight (:type built-in)
-  :config
-  (defun u/flymake-show-buffer-diagnostics ()
-    (interactive)
-    (let ((split-width-threshold nil)
-          (split-height-threshold 0))
-      (call-interactively 'flymake-show-buffer-diagnostics)))
-  (define-key u-map (kbd "e l") (lambda() (interactive)(u/flymake-show-buffer-diagnostics)))
   :bind
   (:map u-map
         ("e n" . flymake-goto-next-error)
-        ("e p" . flymake-goto-prev-error)))
+        ("e p" . flymake-goto-prev-error)
+        ("e l" . flymake-show-buffer-diagnostics)))
 
 ;; Visit previously committed verisons of the current file.
 (use-package git-timemachine
@@ -338,9 +354,10 @@
 ;; Git UI
 (use-package magit
   :defer t
-  :config
+  :init
   (setq magit-display-buffer-function 'magit-display-buffer-same-window-except-diff-v1))
 
+;; Show TODOs in the magit status window.
 (use-package magit-todos
   :after (magit)
   :init
@@ -386,7 +403,7 @@
     (setq org-roam-directory (file-truename roam-dir))
     (org-roam-db-autosync-mode)))
 
-;;; = Programming Language (& Config Format) Support =
+;;;; Programming Language (& Config Format) Support
 
 ;; C
 (setq c-basic-offset 4)
@@ -412,6 +429,7 @@
   (add-hook 'markdown-mode-hook 'display-line-numbers-mode))
 
 ;; Python
+;; TODO: add flake & pyisort
 (add-hook 'python-mode-hook 'eglot-ensure)
 (use-package reformatter
   :defer t
@@ -420,7 +438,7 @@
   (add-hook 'python-mode-hook 'black-reformatter-on-save-mode))
 
 ;; Sh
-(use-package flymake-shellcheck ; shellcheck backend for flymake
+(use-package flymake-shellcheck
   :commands flymake-shellcheck-load
   :init
   (add-hook 'sh-mode-hook 'flymake-shellcheck-load)
@@ -437,7 +455,7 @@
   :config
   (add-hook 'yaml-mode-hook 'display-line-numbers-mode))
 
-;;; Load Local Overrides
+;;;; Local Configuration:
 
 ;; load all .el files in $HOME/.config/emacs
 (let* ((local-config-dir "~/.config/emacs"))
