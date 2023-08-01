@@ -1,6 +1,7 @@
-;;; early-init.el --- pre-gui & pre-package.el configuration.
+;;; early-init.el --- Pre-gui & pre-package.el configuration.
 
 ;;; Commentary:
+;; Loaded by Emacs 27.1+ before `init.el`.
 
 ;;; Code:
 
