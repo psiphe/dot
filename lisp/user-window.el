@@ -7,9 +7,9 @@
 ;; Do not prompt when killing process buffers.
 (setq kill-buffer-query-functions (delq 'process-kill-buffer-query-function kill-buffer-query-functions))
 
-(global-set-key (kbd "M-;") 'comment-line)
 (global-set-key (kbd "M-m") 'scroll-other-window)      ; hack: mapped in iterm to C-.
 (global-set-key (kbd "M-o") 'scroll-other-window-down) ; hack: mapped in iterm to C-,
+(define-key u-map (kbd "C-k") 'kill-current-buffer)
 
 ;; Better `other-window`.
 (use-package ace-window
@@ -20,7 +20,7 @@
 
 ;; Automatically remove extra whitespace.
 (use-package whitespace-cleanup-mode
-  :hook (conf-mode prog-mode org-mode))
+  :hook (conf-mode org-mode prog-mode))
 
 ;; Undo/redo for the window arrangement.
 (use-package winner

@@ -33,8 +33,8 @@
     (setq org-roam-directory (file-truename roam-dir))
     (org-roam-db-autosync-mode))
   :bind
-  (:map u-map
-        ("o n" . org-roam-node-find)))
+  (:map u-map/org
+        ("n" . org-roam-node-find)))
 
 (provide 'user-org)
 ;;; user-org.el ends here

@@ -1,6 +1,8 @@
 # -*-sh-*-
 # shellcheck shell=bash
 
+# = Misc. Shared Setup =
+
 _os=$(uname -s | tr '[:upper:]' '[:lower:]')
 alias _mac='[ "$_os" = "darwin" ]'
 alias _linux='[ "$_os" = "linux" ]'
@@ -19,8 +21,9 @@ shopt -s histappend
 export HISTSIZE=5000
 _mac && export BASH_SILENCE_DEPRECATION_WARNING=1
 
+export ALTERNATE_EDITOR="emacs -nw"
 export EDITOR="vim" && export VISUAL="vim"
-command -v emacs &>/dev/null && export EDITOR="emacs" && export VISUAL="emacs"
+command -v emacs &>/dev/null && export EDITOR="emacsclient -nw" && export VISUAL="emacsclient -nw"
 
 alias e='$EDITOR'
 alias f="find . -type f -name"
@@ -46,7 +49,7 @@ alias gs="git status"
 # = Prompt =
 
 black_fg="\[\e[0;30m\]"
-green_fg="\[\e[32m\]"
+cyan_fg="\[\e[36m\]"
 red_fg="\[\e[31m\]"
 yellow_fg="\[\e[33m\]"
 endcolor="\[\e[0m\]"
@@ -54,8 +57,8 @@ endcolor="\[\e[0m\]"
 _active_git_branch()
 {
     ! git branch &>/dev/null && return
-    # green by default, yellow if there are uncommitted changes
-    display_color="$green_fg"
+    # cyan by default, yellow if there are uncommitted changes
+    display_color="$cyan_fg"
     ! git diff --exit-code &>/dev/null && display_color="$yellow_fg"
     # parse the current branch
     branch=$(git branch 2>/dev/null | sed '/^[^*]/d' | sed -r 's/[* ]+//g')
@@ -70,7 +73,7 @@ _prompt()
     # print non-zero exit codes
     [ $prevexit -ne 0 ] && PS1="${red_fg}[$prevexit]"
     PS1+=$(_active_git_branch)
-    PS1+="$black_fg:/\w $ "
+    PS1+="$black_fg \w $ "
     PS1+="$endcolor"
 }
 
@@ -105,7 +108,7 @@ ta() {
 # Create a new alias named $1 to cd into $(pwd)
 # $1: name of the alias
 tcd() {
-    [ -z "$1" ] && echo "missing the name of the alias" && return
+    [ -z "$1" ] && echo "missing the name of the alias" && return 1
     ta "$1" "cd $(pwd)"
 }
 
@@ -113,7 +116,7 @@ tcd() {
 
 # == fzf ==
 # A general purpose fuzzy finder; useful for creating interactive bindings
-# for command line programs.
+# for command line programs, or entire interfaces.
 #
 # e.g. `cd $(find . -type d | fzf)` - interactively `cd` into a directory
 
@@ -165,7 +168,7 @@ if command -v fzf &>/dev/null; then
     # === fuzzy builtins === #
 
     # Fuzzy edit.
-    # $1: Directory to search, default to current directory.
+    # $1: Directory to s
     fe() {
         local files dir
         dir=${1:-*}

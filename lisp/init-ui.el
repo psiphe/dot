@@ -12,11 +12,12 @@
   :init
   (setq centaur-tabs-set-icons t)
   :config
-  (setq centaur-tabs--buffer-show-groups t
-        centaur-tabs-gray-out-icons 'buffer
+  (setq centaur-tabs-gray-out-icons 'buffer
         centaur-tabs-show-new-tab-button nil
         centaur-tabs-close-button ""
-        centaur-tabs-enable-ido-completion nil)
+        centaur-tabs-enable-ido-completion nil
+        centaur-tabs-ace-jump-keys '(?a ?s ?d ?f ?j ?k ?l)
+        centaur-tabs-ace-jump-dim-buffer nil)
   ;; disable tabs in a few major modes
   (add-hook 'compilation-mode-hook 'centaur-tabs-local-mode)
   (add-hook 'dired-mode-hook 'centaur-tabs-local-mode)
@@ -33,12 +34,17 @@
                               magit-file-mode
                               magit-blob-mode
                               magit-blame-mode
+                              dired-mode
                               helpful-mode
                               help-mode
                               )))
       "Meta")
       (t
-      (centaur-tabs-get-group-name (current-buffer)))))))
+       (centaur-tabs-get-group-name (current-buffer))))))
+  :bind
+  (:map u-map
+        ("t t" . centaur-tabs-toggle-groups)
+        ("t o" . centaur-tabs-ace-jump)))
 
 (use-package doom-modeline
   :hook
@@ -49,20 +55,19 @@
   :init
   (add-hook 'emacs-startup-hook (load-theme 'glitch t)))
 
+(use-package hl-line
+  :straight (:type built-in)
+  :hook (emacs-startup . global-hl-line-mode))
+
 ;; Highlight the cursor whenever a function in `pulsar-pulse-functions` is called.
 (use-package pulsar
   :hook (emacs-startup . pulsar-global-mode)
   :config
-  (setq pulsar-pulse nil) ; highlight the line instead of pulsing.
-  (add-to-list 'pulsar-pulse-functions 'evil-scroll-page-down)
   (with-eval-after-load 'ace-window
     (add-to-list 'pulsar-pulse-functions 'ace-window))
   (with-eval-after-load 'avy
     (add-to-list 'pulsar-pulse-functions 'avy-goto-line)
-    (add-to-list 'pulsar-pulse-functions 'avy-goto-word-or-subword-1))
-  (with-eval-after-load 'evil
-    (add-to-list 'pulsar-pulse-functions 'evil-scroll-page-down)
-    (add-to-list 'pulsar-pulse-functions 'evil-scroll-page-up)))
+    (add-to-list 'pulsar-pulse-functions 'avy-goto-word-or-subword-1)))
 
 ;; A replacement for `all-the-icons` with terminal support.
 ;; Enables icons via unicode glyphs.
@@ -74,6 +79,17 @@
 (use-package nerd-icons-dired
   :hook
   (dired-mode . nerd-icons-dired-mode))
+
+;; Dim certain buffers.
+(use-package solaire-mode
+  :hook (emacs-startup . solaire-global-mode)
+  :config
+  (defun user-solaire-filter ()
+    "Custom solaire selection."
+    (cond ((memq major-mode `(dired-mode)) nil)
+          (t t)))
+  (setq solaire-mode-real-buffer-fn 'user-solaire-filter)
+  (remove-hook 'solaire-global-mode-hook #'solaire-mode-fix-minibuffer))
 
 ;; Center text instead of left-justifying.
 (use-package writeroom-mode

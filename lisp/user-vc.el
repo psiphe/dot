@@ -4,10 +4,6 @@
 
 ;;; Code:
 
-(defvar u-map/vc)
-(define-prefix-command 'u-map/vc)
-(define-key u-map (kbd "v") u-map/vc)
-
 ;; Show version control changes in the margin.
 (use-package diff-hl
   :hook (prog-mode)

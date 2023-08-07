@@ -13,7 +13,11 @@
 (use-package dirvish
   :init
   (dirvish-override-dired-mode)
+  (dirvish-side-follow-mode)
+  (setq dirvish-side-width 25)
   :bind
+  (:map u-map
+        ("C-v f" . dirvish-side))
   (:map dirvish-mode-map
         ("'" . dirvish-layout-toggle)))
 
