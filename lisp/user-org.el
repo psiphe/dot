@@ -1,14 +1,21 @@
 ;;; user-org.el ---
 
 ;;; Commentary:
+;; TODO: I think use-package is loading org right away
 
 ;;; Code:
 
 (use-package org
-  :defer t
   :straight (:type built-in)
   :config
-  (setq org-hide-emphasis-markers t
+  (setq org-agenda-files (directory-files-recursively org-directory "\\.org$")
+        org-capture-templates '(("q" "Quick" entry (file org-default-notes-file)
+                                 "** TODO %?\n  :PROPERTIES:\n  :Source:%a\n  :END:\n  DEADLINE: %t\n  %i\n")
+                                ("i" "Idea" entry (file+headline org-default-notes-file "Ideas")
+                                 "** IDEA %?\n  :PROPERTIES\n  :Source:%a\n  :END:\n  %i\n")
+                                ("t" "Todo" entry (file org-default-notes-file)
+                                 "** TODO %?\n  :PROPERTIES:\n  :Source:%a\n  :END:\n  %i\n"))
+        org-default-notes-file (concat org-directory "/quick.org")
         org-pretty-entities t
         org-startup-folded t
         org-todo-keywords '((sequence
@@ -16,25 +23,16 @@
                              "|"
                              "DONE(d)")))
   :bind
+  (:map u-map/org
+        ("a" . org-agenda)
+        ("c" . org-capture)
+        ("f" . (lambda () (interactive) (ido-find-file-in-dir "~/org"))))
   (:map org-mode-map
         ("C-j" . nil)))
 
-;; Eye-candy for org.
+;; Eye-candy.
 (use-package org-modern
   :hook (org-mode))
-
-;; Managed notes (a zettelkasten mode).
-(use-package org-roam
-  :commands org-roam-node-find
-  :config
-  (let* ((roam-dir org-directory))
-    (unless (file-exists-p roam-dir)
-      (make-directory roam-dir))
-    (setq org-roam-directory (file-truename roam-dir))
-    (org-roam-db-autosync-mode))
-  :bind
-  (:map u-map/org
-        ("n" . org-roam-node-find)))
 
 (provide 'user-org)
 ;;; user-org.el ends here

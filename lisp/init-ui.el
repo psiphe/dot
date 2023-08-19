@@ -5,19 +5,21 @@
 ;;; Code:
 
 (menu-bar-mode -1)
+(global-hl-line-mode 1)
 (set-display-table-slot standard-display-table 'vertical-border (make-glyph-code ?│))
 
 (use-package centaur-tabs
-  :hook (emacs-startup)
+  :hook
+  (emacs-startup)
   :init
   (setq centaur-tabs-set-icons t)
   :config
-  (setq centaur-tabs-gray-out-icons 'buffer
+  (setq centaur-tabs--buffer-show-groups t
+        centaur-tabs-gray-out-icons 'buffer
         centaur-tabs-show-new-tab-button nil
         centaur-tabs-close-button ""
         centaur-tabs-enable-ido-completion nil
-        centaur-tabs-ace-jump-keys '(?a ?s ?d ?f ?j ?k ?l)
-        centaur-tabs-ace-jump-dim-buffer nil)
+        centaur-tabs-ace-jump-keys '(?a ?s ?d ?f ?j ?k ?l))
   ;; disable tabs in a few major modes
   (add-hook 'compilation-mode-hook 'centaur-tabs-local-mode)
   (add-hook 'dired-mode-hook 'centaur-tabs-local-mode)
@@ -43,8 +45,7 @@
        (centaur-tabs-get-group-name (current-buffer))))))
   :bind
   (:map u-map
-        ("t t" . centaur-tabs-toggle-groups)
-        ("t o" . centaur-tabs-ace-jump)))
+        ("t t" . centaur-tabs-toggle-groups)))
 
 (use-package doom-modeline
   :hook
@@ -55,50 +56,25 @@
   :init
   (add-hook 'emacs-startup-hook (load-theme 'glitch t)))
 
-(use-package hl-line
-  :straight (:type built-in)
-  :hook (emacs-startup . global-hl-line-mode))
-
-;; Highlight the cursor whenever a function in `pulsar-pulse-functions` is called.
-(use-package pulsar
-  :hook (emacs-startup . pulsar-global-mode)
-  :config
-  (with-eval-after-load 'ace-window
-    (add-to-list 'pulsar-pulse-functions 'ace-window))
-  (with-eval-after-load 'avy
-    (add-to-list 'pulsar-pulse-functions 'avy-goto-line)
-    (add-to-list 'pulsar-pulse-functions 'avy-goto-word-or-subword-1)))
-
 ;; A replacement for `all-the-icons` with terminal support.
 ;; Enables icons via unicode glyphs.
 ;; Requires a nerd font: https://github.com/ryanoasis/nerd-fonts
-(use-package nerd-icons
-  :after
-  (centaur-tabs doom-modeline))
+(use-package nerd-icons)
 
 (use-package nerd-icons-dired
+  :after
+  (nerd-icons)
   :hook
   (dired-mode . nerd-icons-dired-mode))
 
-;; Dim certain buffers.
-(use-package solaire-mode
-  :hook (emacs-startup . solaire-global-mode)
-  :config
-  (defun user-solaire-filter ()
-    "Custom solaire selection."
-    (cond ((memq major-mode `(dired-mode)) nil)
-          (t t)))
-  (setq solaire-mode-real-buffer-fn 'user-solaire-filter)
-  (remove-hook 'solaire-global-mode-hook #'solaire-mode-fix-minibuffer))
-
-;; Center text instead of left-justifying.
 (use-package writeroom-mode
-  :hook (emacs-startup . global-writeroom-mode)
+  :hook
+  (emacs-startup . global-writeroom-mode)
   :config
-  (setq writeroom-major-modes '(text-mode conf-mode prog-mode)
+  (setq writeroom-major-modes '(conf-mode org-mode prog-mode)
         writeroom-mode-line t
         writeroom-width 120
-        writeroom-maximize-window nil))
+        writeroom-maximize-window nil)) ; allow multiple buffers to be open at once.
 
 ;; Highlight mutating changes (e.g. undo)
 (use-package volatile-highlights

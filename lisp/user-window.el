@@ -18,10 +18,6 @@
   :bind
   ("C-x o" . ace-window))
 
-;; Automatically remove extra whitespace.
-(use-package whitespace-cleanup-mode
-  :hook (conf-mode org-mode prog-mode))
-
 ;; Undo/redo for the window arrangement.
 (use-package winner
   :straight (:type built-in)
@@ -34,12 +30,13 @@
 ;; Persistent buffer/window configurations.
 (use-package workgroups2
   :config
-  (setq wg-session-file (concat user-emacs-directory "/.emacs_workgroups"))
+  (setq wg-session-file (concat user-emacs-directory "/.emacs_workgroups")
+        wg-no-confirm-on-destructive-operation t)
   :bind
-  (:map u-map
-        ("w c" . wg-create-workgroup)
-        ("w k" . wg-kill-workgroup)
-        ("w f" . wg-open-workgroup)))
+  (:map u-map/window
+        ("c" . wg-create-workgroup)
+        ("w" . wg-kill-workgroup)
+        ("f" . wg-open-workgroup)))
 
 (provide 'user-window)
 ;;; user-window.el ends here

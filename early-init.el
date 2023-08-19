@@ -1,11 +1,11 @@
-;;; early-init.el --- Pre-gui & pre-package.el configuration.
+;;; early-init.el ---
 
 ;;; Commentary:
-;; Loaded by Emacs 27.1+ before `init.el`.
 
 ;;; Code:
 
-;; Max `gc-cons-threshold` to avoid gc at startup - must be reset later.
+;; Max out `gc-cons-threshold` to speed up startup. This should be reset later
+;; to avoid excessively long garbage collections.
 (setq gc-cons-threshold most-positive-fixnum
       inhibit-splash-screen t
       package-enable-at-startup nil)

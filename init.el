@@ -17,6 +17,7 @@
 (require 'user-editing)
 (require 'user-dired)
 (require 'user-minibuffer)
+
 ;; programming
 (require 'user-coding-common)
 (require 'user-c-lang)

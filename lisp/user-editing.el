@@ -41,6 +41,7 @@
 (global-set-key (kbd "C-o") 'open-line-below)
 (global-set-key (kbd "C-q") 'open-line-above)
 (global-set-key (kbd "C-k") 'kill-whole-line)
+(global-set-key (kbd "C-c C-j") 'join-line)
 (define-key u-map (kbd "C-d") 'zap-up-to-char)
 (define-key u-map (kbd "C-o") 'load-fast-point)
 (define-key u-map (kbd "RET") 'store-fast-point)
@@ -100,11 +101,21 @@
         ("C-x p b" . consult-project-buffer)
         ("M-y" . consult-yank-pop)))
 
+;; Select around the cursor by semantic units.
+(use-package expand-region
+  :bind
+  (:map u-map
+        ("C-e" . er/expand-region)))
+
 ;; Mid-keystroke popup showing possible completions.
 (use-package which-key
   :hook (emacs-startup)
   :config
   (which-key-setup-side-window-right-bottom))
+
+;; Automatically remove extra whitespace.
+(use-package whitespace-cleanup-mode
+  :hook (conf-mode prog-mode))
 
 (provide 'user-editing)
 ;;; user-editing.el ends here

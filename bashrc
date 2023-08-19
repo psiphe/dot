@@ -48,11 +48,12 @@ alias gs="git status"
 
 # = Prompt =
 
-black_fg="\[\e[0;30m\]"
+white_fg="\[\e[0;38m\]"
 cyan_fg="\[\e[36m\]"
 red_fg="\[\e[31m\]"
 yellow_fg="\[\e[33m\]"
 endcolor="\[\e[0m\]"
+black_bg="\[\e[40m\]"
 
 _active_git_branch()
 {
@@ -73,8 +74,8 @@ _prompt()
     # print non-zero exit codes
     [ $prevexit -ne 0 ] && PS1="${red_fg}[$prevexit]"
     PS1+=$(_active_git_branch)
-    PS1+="$black_fg \w $ "
-    PS1+="$endcolor"
+    PS1+="$white_fg $black_bg \w $ "
+    PS1+="$endcolor "
 }
 
 PROMPT_COMMAND=_prompt # bash evaluates $PROMPT_COMMAND before each new prompt
