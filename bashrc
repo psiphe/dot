@@ -63,7 +63,7 @@ _active_git_branch()
     ! git diff --exit-code &>/dev/null && display_color="$yellow_fg"
     # parse the current branch
     branch=$(git branch 2>/dev/null | sed '/^[^*]/d' | sed -r 's/[* ]+//g')
-    echo "${display_color}[$branch]"
+    echo "${display_color}[$branch] "
 }
 
 _prompt()
@@ -74,7 +74,7 @@ _prompt()
     # print non-zero exit codes
     [ $prevexit -ne 0 ] && PS1="${red_fg}[$prevexit]"
     PS1+=$(_active_git_branch)
-    PS1+="$white_fg $black_bg \w $ "
+    PS1+="$white_fg$black_bg \w $ "
     PS1+="$endcolor "
 }
 
