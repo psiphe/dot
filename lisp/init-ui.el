@@ -13,6 +13,12 @@
   (emacs-startup)
   :init
   (setq centaur-tabs-set-icons t)
+  ;; Tabs do not load correctly in daemon clients.
+  (if (daemonp)
+      (add-hook 'after-make-frame-functions (lambda (frame)
+                                              (with-selected-frame frame)
+                                              (centaur-tabs-mode -1)
+                                              (centaur-tabs-mode 1))))
   :config
   (setq centaur-tabs--buffer-show-groups t
         centaur-tabs-gray-out-icons 'buffer
@@ -45,7 +51,10 @@
        (centaur-tabs-get-group-name (current-buffer))))))
   :bind
   (:map u-map
-        ("t t" . centaur-tabs-toggle-groups)))
+        ("t t" . centaur-tabs-toggle-groups)
+        ("t n" . centaur-tabs-forward)
+        ("t p" . centaur-tabs-backward)
+        ("t o" . centaur-tabs-ace-jump)))
 
 (use-package doom-modeline
   :hook

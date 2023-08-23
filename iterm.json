@@ -63,7 +63,7 @@
   "Scrollback Lines" : 1000,
   "HotKey Window Reopens On Activation" : false,
   "Draw Powerline Glyphs" : false,
-  "Flashing Bell" : true,
+  "Flashing Bell" : false,
   "Cursor Guide Color" : {
     "Red Component" : 0.70214027166366577,
     "Color Space" : "sRGB",
@@ -356,7 +356,7 @@
     "Green Component" : 0.46274509803921571
   },
   "Name" : "dev",
-  "Blinking Cursor" : false,
+  "Blinking Cursor" : true,
   "Guid" : "38DF9C55-E8A9-41FD-A2F6-65EAA56ABDC4",
   "Idle Code" : 0,
   "Ansi 10 Color" : {
@@ -392,7 +392,7 @@
   },
   "Cursor Type" : 0,
   "Blur" : false,
-  "Normal Font" : "JetBrainsMonoNLNFM-Regular 14",
+  "Normal Font" : "JetBrainsMonoNLNFM-Medium 14",
   "Vertical Spacing" : 1.1499999999999999,
   "Use Underline Color" : false,
   "Ansi 7 Color" : {
@@ -430,11 +430,11 @@
   "Transparency" : 0.29999999999999999,
   "HotKey Activated By Modifier" : false,
   "Background Color" : {
-    "Red Component" : 0.14117647058823529,
+    "Red Component" : 0.10196078431372549,
     "Color Space" : "sRGB",
-    "Blue Component" : 0.23137254901960785,
+    "Blue Component" : 0.17647058823529413,
     "Alpha Component" : 1,
-    "Green Component" : 0.15686274509803921
+    "Green Component" : 0.11764705882352941
   },
   "Screen" : -1,
   "Initial Use Transparency" : true,
@@ -452,7 +452,7 @@
 
   ],
   "Use Tab Color" : false,
-  "Visual Bell" : true,
+  "Visual Bell" : false,
   "Custom Directory" : "No",
   "Ansi 5 Color" : {
     "Red Component" : 0.73333333333333328,

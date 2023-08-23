@@ -117,5 +117,9 @@
 (use-package whitespace-cleanup-mode
   :hook (conf-mode prog-mode))
 
+;; Integrate Emacs with the system clipboard.
+(use-package xclip
+  :hook (emacs-startup))
+
 (provide 'user-editing)
 ;;; user-editing.el ends here
