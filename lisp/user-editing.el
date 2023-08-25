@@ -25,41 +25,21 @@
   (open-line arg)
   (indent-according-to-mode))
 
-(defun store-fast-point()
-  "Store current point to the self-managed `fast user point register`."
-  (interactive)
-  (point-to-register :user-fast-point))
-
-(defun load-fast-point()
-  "Jump to the self-managed `fast user point register`, swap current point in."
-  (interactive)
-  (let* ((cur-point (point-marker)))
-    (jump-to-register :user-fast-point)
-    (set-register :user-fast-point cur-point)))
-
 (global-set-key (kbd "M-;") 'comment-line)
 (global-set-key (kbd "C-o") 'open-line-below)
 (global-set-key (kbd "C-q") 'open-line-above)
 (global-set-key (kbd "C-k") 'kill-whole-line)
 (global-set-key (kbd "C-c C-j") 'join-line)
 (define-key u-map (kbd "C-d") 'zap-up-to-char)
-(define-key u-map (kbd "C-o") 'load-fast-point)
-(define-key u-map (kbd "RET") 'store-fast-point)
 (define-key u-map (kbd "C-q") 'pop-global-mark)
 (define-key u-map (kbd "M-8") 'point-to-register)
 (define-key u-map (kbd "M-9") 'jump-to-register)
-
-(advice-add 'isearch-forward :before 'store-fast-point)
-(advice-add 'isearch-backward :before 'store-fast-point)
 
 ;; Hotkey based search / edit.
 (use-package avy
   :demand t
   :config
   (setq avy-keys '(?a ?s ?d ?f ?j ?k ?l))
-  (advice-add 'avy-goto-word-or-subword-1 :before 'store-fast-point)
-  (advice-add 'avy-goto-char-timer :before 'store-fast-point)
-  (advice-add 'avy-goto-line :before 'store-fast-point)
   :bind
   (:map u-map
         ("C-f" . avy-goto-word-or-subword-1)

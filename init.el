@@ -11,10 +11,13 @@
 (require 'init-sys)
 (require 'init-ui)
 
+(require 'ui-tabs)
+
 (require 'user-org)
 (require 'user-vc)
 (require 'user-window)
 (require 'user-editing)
+(require 'editing-yasnippet)
 (require 'user-dired)
 (require 'user-minibuffer)
 
