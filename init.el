@@ -13,6 +13,13 @@
 
 (require 'ui-tabs)
 
+(use-package vterm
+  :bind
+  (:map vterm-mode-map
+        ("C-c C-j" . vterm-copy-mode))
+  (:map vterm-copy-mode-map
+        ("C-c C-j" . vterm-copy-mode)))
+
 (require 'user-org)
 (require 'user-vc)
 (require 'user-window)
