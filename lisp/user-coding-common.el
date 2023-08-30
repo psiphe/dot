@@ -4,7 +4,7 @@
 
 ;;; Code:
 
-(setq-default compilation-scroll-output t
+(setq-default compilation-scroll-output 'first-error
               fill-column 80)
 
 (add-hook 'compilation-filter-hook 'ansi-color-compilation-filter)

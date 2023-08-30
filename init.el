@@ -31,6 +31,7 @@
 ;; programming
 (require 'user-coding-common)
 (require 'user-c-lang)
+(require 'user-c++-lang)
 (require 'user-config-lang)
 (require 'user-elisp-lang)
 (require 'user-python-lang)

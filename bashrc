@@ -27,19 +27,19 @@ command -v emacs &>/dev/null && export EDITOR="emacsclient -nw" && export VISUAL
 
 alias e='$EDITOR'
 alias f="find . -type f -name"
-alias g="grep --color=auto -insH"
+alias g="grep -insH"
 alias gr="g -R"
 alias l="ls -lA --color=always"
-alias pg="pgrep -fal"
+alias pg="pgrep -fl"
 alias pk="pkill -f"
 alias r='source $HOME/.bashrc'
 
 alias ga="git add"
 alias gb="git branch"
-alias gch="git checkout"
-alias gchb="git checkout -b"
 alias gc="git commit"
 alias gca="git commit --amend"
+alias gch="git checkout"
+alias gchb="git checkout -b"
 alias gcm="git commit -m"
 alias gd="git diff"
 alias gdc="git diff --cached" # show staged diff
@@ -48,12 +48,12 @@ alias gs="git status"
 
 # = Prompt =
 
-white_fg="\[\e[0;38m\]"
+black_fg="\[\e[30m\]"
 cyan_fg="\[\e[36m\]"
 red_fg="\[\e[31m\]"
 yellow_fg="\[\e[33m\]"
 endcolor="\[\e[0m\]"
-black_bg="\[\e[40m\]"
+white_bg="\[\e[47m\]"
 
 _active_git_branch()
 {
@@ -74,7 +74,7 @@ _prompt()
     # print non-zero exit codes
     [ $prevexit -ne 0 ] && PS1="${red_fg}[$prevexit]"
     PS1+=$(_active_git_branch)
-    PS1+="$white_fg$black_bg \w $ "
+    PS1+="$black_fg$white_bg \w $ "
     PS1+="$endcolor "
 }
 

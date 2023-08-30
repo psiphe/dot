@@ -1,11 +1,9 @@
 ;;; init-local.el --- Load machine local config.
-
 ;;; Commentary:
 ;; Load all of the `.el` files in $HOME/.config/emacs.
-
 ;;; Code:
 
-(let* ((local-config-dir "~/.config/emacs"))
+(let ((local-config-dir "~/.config/emacs"))
   (unless (file-exists-p local-config-dir)
     (make-directory local-config-dir))
   (cl-loop for file in (directory-files-recursively local-config-dir "\\.el$")

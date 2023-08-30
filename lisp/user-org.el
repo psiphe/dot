@@ -5,7 +5,9 @@
 
 ;;; Code:
 
-(setq org-agenda-custom-commands
+(setq org-cycle-separator-lines 1
+      org-use-speed-commands t
+      org-agenda-custom-commands
            '(("w" "Work summary"
               ((agenda "d" ((org-agenda-overriding-header "\n\n")))
                (todo "CURR" ((org-agenda-overriding-header "In Progress:")))
