@@ -31,7 +31,7 @@
   :hook
   (emacs-startup . global-writeroom-mode)
   :config
-  (setq writeroom-major-modes '(conf-mode org-mode org-agenda-mode prog-mode)
+  (setq writeroom-major-modes '(conf-mode org-mode org-agenda-mode prog-mode Info-mode)
         writeroom-mode-line t
         writeroom-width 120
         writeroom-maximize-window nil)) ; allow multiple buffers to be open at once.

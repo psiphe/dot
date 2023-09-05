@@ -1,6 +1,5 @@
 # -*- mode: snippet -*-
-# name: description
-# key: desc
+# name: package skeleton
 # --
 ;;; $1.el --- $2
 ;;; Commentary:
