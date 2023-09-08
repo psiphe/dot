@@ -1,7 +1,6 @@
 ;;; user-org.el --- Org & co.
 ;;; Commentary:
-;; TODO: capture from code that will group/search by project
-;; TODO: timegrid is not working in org-agenda
+;; TODO: capture from code should add a tag or label with the project
 ;;; Code:
 
 (use-package org
@@ -17,10 +16,10 @@
   (setq org-archive-subtree-save-file-p t
         org-clock-into-drawer "TIME"
         org-clock-persist t
-        org-cycle-separator-lines 1
         org-default-notes-file (concat org-directory "/mailbox.org")
         org-enforce-todo-checkbox-dependencies t
         org-enforce-todo-dependencies t
+        org-hide-leading-stars t
         org-log-done 'note
         org-log-into-drawer "LOGBOOK"
         org-startup-folded t
@@ -29,8 +28,8 @@
   (:map org-mode-map
         ("C-j" . nil)
         ("C-j C-a" . org-archive-subtree)
-        ("C-j C-j" . org-toggle-narrow-to-subtree)
-        ("C-j C-t" . org-todo)
+        ("C-j C-w" . org-toggle-narrow-to-subtree)
+        ("C-j C-q" . org-todo)
         ("C-j RET" . org-insert-heading-respect-content)
         ("C-j i ." . org-time-stamp)
         ("C-j i d" . org-deadline)
@@ -41,7 +40,7 @@
         ("C-j i t" . org-table-create-or-convert-from-region))
   (:map u-map/org
         ("f" . (lambda () (interactive) (ido-find-file-in-dir org-directory)))
-        ("j" . org-clock-goto)))
+        ("w" . org-clock-goto)))
 
 (use-package org-agenda
   :straight (:type built-in)
@@ -52,27 +51,40 @@
            ((org-agenda-overriding-header "Ideas")))
           ("o" "Overview" ((agenda "d"
                                    ((org-agenda-overriding-header "\n")
-                                    (org-agenda-span 'day)))
+                                    (org-agenda-span 'week)))
                            (todo "WIP"
                                  ((org-agenda-overriding-header "In Progress:")))
                            (todo "REVW"
                                  ((org-agenda-overriding-header "In Review:")))
                            (todo "DEPLOYING"
                                  ((org-agenda-overriding-header "Deploying:"))))))
+        org-agenda-deadline-leaders '("Due today:      " "Due in %d days:  " "")
         org-agenda-entry-types '(:deadline :scheduled)
         org-agenda-files (directory-files-recursively org-directory "\\.org$")
         org-agenda-prefix-format '((agenda . "%i %s") (search "%i %s") (tags . "%i %s") (todo . "%i %s"))
         org-agenda-restore-windows-after-quit t
-        org-agenda-start-on-weekday nil
+        org-agenda-scheduled-leaders '("Scheduled:      " "")
+        org-agenda-start-on-weekday 1
         org-agenda-tags-column -80
-        org-agenda-window-setup 'current-window)
+        org-agenda-window-setup 'current-window
+        org-deadline-past-days 0
+        org-deadline-warning-days 0)
   :bind
+  (:map org-agenda-mode-map
+        ("a" . org-agenda-archive)
+        ("c" . org-agenda-capture)
+        ("i" . nil) ; unbind org-agenda-diary
+        ("i d" . org-agenda-deadline)
+        ("i n" . org-agenda-add-note)
+        ("i p" . org-agenda-priority)
+        ("i s" . org-agenda-schedule)
+        ("o" . org-agenda-tree-to-indirect-buffer))
   (:map u-map/org
         ("a" . org-agenda))
   (:map u-map/org-alt
-        ("TAB" . (lambda () (interactive) (org-agenda nil "i")))    ; HACK-y: in most terminals C-i sends TAB
-        ("C-o" . (lambda () (interactive) (org-agenda nil "o")))
-        ("C-t" . (lambda () (interactive) (org-agenda nil "t")))))
+        ("i" . (lambda () (interactive) (org-agenda nil "i")))
+        ("a" . (lambda () (interactive) (org-agenda nil "o")))
+        ("t" . (lambda () (interactive) (org-agenda nil "t")))))
 
 (use-package org-capture
   :straight (:type built-in)
@@ -84,14 +96,14 @@
                                 ("t" "Todo" entry (file+headline org-default-notes-file "Todos")
                                  "** TODO %? %^G\nCreated: %T\n%i\n")
                                 ("w" "Task" entry (file+headline org-default-notes-file "Todos")
-                                 "** TODO [#B] %? %^G\nDEADLINE: %^t\nCreated: %T\n%i\n")))
+                                 "** TODO [#B] %? %^G\nSCHEDULED: %^t DEADLINE: %^t\nCreated: %T\n%i\n")))
   :bind
   (:map u-map/org
         ("c" . org-capture))
   (:map u-map/org-alt
-        ("RET" . (lambda () (interactive) (org-capture nil "m")))   ; HACK-y: in most terminals C-m sends RET
-        ("C-q" . (lambda () (interactive) (org-capture nil "t")))
-        ("C-w" . (lambda () (interactive) (org-capture nil "w")))))
+        ("m" . (lambda () (interactive) (org-capture nil "m")))
+        ("q" . (lambda () (interactive) (org-capture nil "t")))
+        ("w" . (lambda () (interactive) (org-capture nil "w")))))
 
 (provide 'user-org)
 ;;; user-org.el ends here

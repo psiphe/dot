@@ -1,7 +1,5 @@
 ;;; user-editing.el ---
-
 ;;; Commentary:
-
 ;;; Code:
 
 (setq-default indent-tabs-mode nil
@@ -31,9 +29,8 @@
 (global-set-key (kbd "C-k") 'kill-whole-line)
 (global-set-key (kbd "C-c C-j") 'join-line)
 (define-key u-map (kbd "C-d") 'zap-up-to-char)
-(define-key u-map (kbd "C-q") 'pop-global-mark)
-(define-key u-map (kbd "M-8") 'point-to-register)
-(define-key u-map (kbd "M-9") 'jump-to-register)
+(define-key u-map (kbd "M-8") 'point-to-register) ; HACK: I map C-; -> M-8
+(define-key u-map (kbd "M-9") 'jump-to-register)  ; HACK: I map C-' -> M-9
 
 ;; Hotkey based search / edit.
 (use-package avy
@@ -55,7 +52,7 @@
   :demand t
   :bind
   (:map u-map
-        ("TAB" . change-inner)))
+        ("TAB" . change-inner))) ; HACK-y: C-i sends TAB in most terminals
 
 ;; Autocomplete.
 (use-package company
@@ -77,8 +74,6 @@
   (advice-add #'register-preview :override #'consult-register-window)
   :bind
   (:map global-map
-        ("C-x b" . consult-buffer)
-        ("C-x p b" . consult-project-buffer)
         ("M-y" . consult-yank-pop)))
 
 ;; Select around the cursor by semantic units.
@@ -95,11 +90,7 @@
 
 ;; Automatically remove extra whitespace.
 (use-package whitespace-cleanup-mode
-  :hook (conf-mode prog-mode))
-
-;; Integrate Emacs with the system clipboard.
-(use-package xclip
-  :hook (emacs-startup))
+  :hook (conf-mode prog-mode org-mode))
 
 (provide 'user-editing)
 ;;; user-editing.el ends here

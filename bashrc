@@ -48,12 +48,12 @@ alias gs="git status"
 
 # = Prompt =
 
-black_fg="\[\e[30m\]"
-cyan_fg="\[\e[36m\]"
-red_fg="\[\e[31m\]"
-yellow_fg="\[\e[33m\]"
-endcolor="\[\e[0m\]"
-white_bg="\[\e[47m\]"
+blue_fg="\[\e[34m\]"
+cyan_fg="\[\e[1;36m\]"
+endcolor="\[\e[0;0;0m\]"
+green_fg="\[\e[1;32m\]"
+red_fg="\[\e[1;31m\]"
+yellow_fg="\[\e[1;33m\]"
 
 _active_git_branch()
 {
@@ -63,7 +63,12 @@ _active_git_branch()
     ! git diff --exit-code &>/dev/null && display_color="$yellow_fg"
     # parse the current branch
     branch=$(git branch 2>/dev/null | sed '/^[^*]/d' | sed -r 's/[* ]+//g')
-    echo "${display_color}[$branch] "
+    echo "$display_color[$branch]$endcolor"
+}
+
+_active_virtualenv()
+{
+    [ -n "$VIRTUAL_ENV" ] && echo "$green_fg(py::${VIRTUAL_ENV##*/})$endcolor"
 }
 
 _prompt()
@@ -74,7 +79,8 @@ _prompt()
     # print non-zero exit codes
     [ $prevexit -ne 0 ] && PS1="${red_fg}[$prevexit]"
     PS1+=$(_active_git_branch)
-    PS1+="$black_fg$white_bg \w $ "
+    PS1+=$(_active_virtualenv)
+    PS1+="$blue_fg \w $"
     PS1+="$endcolor "
 }
 
