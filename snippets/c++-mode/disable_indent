@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: disable_indent
+# key: disable
+# --
+// clang-format off
+$0
+// clang-format on

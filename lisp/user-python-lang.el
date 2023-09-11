@@ -4,7 +4,6 @@
 
 (use-package eglot
   :straight (:type built-in)
-  :defer t
   :hook (python-mode . eglot-ensure))
 
 (use-package python
@@ -12,15 +11,16 @@
   :config
   (setq python-shell-completion-native-enable nil)
   :bind
-  (:map u-map
-        ("O" . run-python)))
+  (:map python-mode-map
+        ("C-j f i" . run-python)))
 
 (use-package pyvenv
   :hook (python-mode)
   :bind
   (:map python-mode-map
-        ("C-j a e" . pyvenv-activate)
-        ("C-j a d" . pyvenv-deactivate)))
+        ("C-j f e" . pyvenv-activate)
+        ("C-j k e" . pyvenv-deactivate)
+        ("C-j n e" . pyvenv-create)))
 
 (use-package reformatter
   :config

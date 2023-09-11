@@ -174,6 +174,13 @@ if command -v fzf &>/dev/null; then
 
     # === fuzzy builtins === #
 
+    fvenv() {
+        ! [ -d ~/.virtualenvs ] && echo "no virtual envs" && return 1
+        venv=$(find ~/.virtualenvs -type d -d 1 | fzf --exit-0) || return $?;
+        source $venv/bin/activate
+        # source ~/.virtualenvs/$venv/
+    }
+
     # Fuzzy edit.
     # $1: Directory to s
     fe() {

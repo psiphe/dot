@@ -1,14 +1,12 @@
 ;;; user-window.el --- Window/buffer/frame management.
-
 ;;; Commentary:
-
 ;;; Code:
 
 ;; Do not prompt when killing process buffers.
 (setq kill-buffer-query-functions (delq 'process-kill-buffer-query-function kill-buffer-query-functions))
 
-(global-set-key (kbd "M-m") 'scroll-other-window)      ; hack: mapped in iterm to C-.
-(global-set-key (kbd "M-o") 'scroll-other-window-down) ; hack: mapped in iterm to C-,
+(global-set-key (kbd "M-m") 'scroll-other-window)      ; HACK: mapped in iterm to C-.
+(global-set-key (kbd "M-o") 'scroll-other-window-down) ; HACK: mapped in iterm to C-,
 (define-key u-map (kbd "C-k") 'kill-current-buffer)
 
 ;; Better `other-window`.
@@ -30,13 +28,13 @@
 ;; Persistent buffer/window configurations.
 (use-package workgroups2
   :config
-  (setq wg-session-file (concat user-emacs-directory "/.emacs_workgroups")
-        wg-no-confirm-on-destructive-operation t)
+  (setq wg-no-confirm-on-destructive-operation t
+        wg-session-file (concat user-emacs-directory "/.emacs_workgroups"))
   :bind
-  (:map u-map/window
-        ("c" . wg-create-workgroup)
-        ("w" . wg-kill-workgroup)
-        ("f" . wg-open-workgroup)))
+  (:map u-map
+        ("f w" . wg-open-workgroup)
+        ("k w" . wg-kill-workgroup)
+        ("n w" . wg-create-workgroup)))
 
 (provide 'user-window)
 ;;; user-window.el ends here

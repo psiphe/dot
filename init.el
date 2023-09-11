@@ -11,6 +11,8 @@
 (require 'init-sys)
 (require 'init-ui)
 
+(setq confirm-kill-processes nil)
+
 (require 'ui-tabs)
 
 (use-package vterm
@@ -19,6 +21,14 @@
         ("C-c C-j" . vterm-copy-mode))
   (:map vterm-copy-mode-map
         ("C-c C-j" . vterm-copy-mode)))
+
+(use-package eww
+  :config
+  (add-hook 'eww-after-render-hook 'eww-readable)
+  (add-hook 'eww-after-render-hook 'visual-line-mode)
+  :bind
+  (:map u-map
+        ("C-j b" . eww)))
 
 (require 'user-org)
 (require 'user-vc)
@@ -51,4 +61,4 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(solaire-default-face ((t (:background "#1c2131")))))
